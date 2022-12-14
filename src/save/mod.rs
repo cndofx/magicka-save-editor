@@ -35,6 +35,8 @@ impl<R: Read + Seek> Save<R> {
     pub fn load_campaign(&mut self) -> Result<SaveInfo, Error> {
         let mut version = String::new();
         let mut version_num = 0;
+
+        // read version information
         if self.reader.read_u8()? == 0xFF {
             version = read_len_string(&mut self.reader)?;
             let nums: Vec<u64> = version.split(".").map(|s| s.parse::<u64>()).collect::<Result<Vec<_>, _>>()?;
@@ -42,26 +44,30 @@ impl<R: Read + Seek> Save<R> {
         } else {
             self.reader.seek_relative(-1)?;
         }
-        println!("current version str: {version}");
-        println!("current version num: {:X}", version_num);
+        // println!("current version str: {version}");
+        // println!("current version num: {:X}", version_num);
 
         // read all 3 save slots
         let mut save_slots: Vec<SaveSlot> = Vec::new();
         for _ in 0..3 {
             if read_boolean(&mut self.reader)? {
                 save_slots.push(SaveSlot::read(&mut self.reader, version_num)?);
-                // dbg!(&save_slots);
             }
         }
 
-        println!("{:X?}", save_slots);
-        todo!()
+        // println!("{:X?}", save_slots);
+        
+        Ok(SaveInfo {
+            product_version: version,
+            save_slots,
+        })
     }
 }
 
+#[derive(Debug)]
 pub struct SaveInfo {
     product_version: String,
-    save_slots: [SaveSlot; 3],
+    save_slots: Vec<SaveSlot>,
 }
 
 /// read string prefixed with a byte specifying the length

@@ -8,6 +8,20 @@ use byteorder::ReadBytesExt;
 use super::Error;
 use super::{read_len_string, Save};
 
+const TIPS_NAMES: [&str; 11] = [
+    "#tu_text_hint_equipment_key",
+    "#tu_text_hint_equipment_pad",
+    "#tu_text_hint_wet_lightning",
+    "#tu_text_hint_wet",
+    "#tu_text_hint_cold",
+    "#tu_text_hint_poison",
+    "#tip09",
+    "#tip10",
+    "#tip15",
+    "#tip17",
+    "#tip18",
+];
+
 /// internal representation of a save slot
 #[derive(Debug)]
 pub struct SaveSlot {
@@ -127,7 +141,17 @@ impl SaveSlot {
             shown_tips.push(tip);
         }
 
-        todo!()
+        Ok(SaveSlot {
+            level,
+            max_allowed_level,
+            looped,
+            total_playtime,
+            current_playtime,
+            players,
+            unlocked_magicks,
+            shown_tips,
+            ..Default::default()
+        })
     }
 }
 
@@ -149,5 +173,29 @@ impl Tip {
             timestamp,
             count,
         })
+    }
+}
+
+impl Default for SaveSlot {
+    fn default() -> Self {
+        Self {
+            buffer: vec![0u8; 1024].into_boxed_slice(),
+            level: 0,
+            max_allowed_level: 0,
+            looped: false,
+            total_playtime: 0,
+            current_playtime: 0,
+            players: HashMap::new(),
+            unlocked_magicks: 0,
+            shown_tips: TIPS_NAMES
+                .iter()
+                .map(|&x| Tip {
+                    name: String::from(x),
+                    timestamp: f64::NEG_INFINITY,
+                    count: 0,
+                })
+                .collect(),
+            checkpoint: Vec::new(),
+        }
     }
 }
