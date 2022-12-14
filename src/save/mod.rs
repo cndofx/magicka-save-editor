@@ -50,9 +50,11 @@ impl<R: Read + Seek> Save<R> {
         for _ in 0..3 {
             if read_boolean(&mut self.reader)? {
                 save_slots.push(SaveSlot::read(&mut self.reader, version_num)?);
-                dbg!(&save_slots);
+                // dbg!(&save_slots);
             }
         }
+
+        println!("{:X?}", save_slots);
         todo!()
     }
 }
