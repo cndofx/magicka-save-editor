@@ -1,6 +1,5 @@
-use std::alloc::System;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read, Seek, BufWriter, Write};
+use std::io::{BufReader, BufWriter, Read, Seek, Write};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -80,8 +79,7 @@ impl<R: Read + Seek> Save<R> {
 }
 
 impl SaveInfo {
-    pub fn save_to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), Error>
-    {
+    pub fn save_to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
         let path = PathBuf::from(path.as_ref());
 
         // backup save if it already exists to prevent data loss
@@ -143,15 +141,12 @@ fn read_boolean<R: Read>(reader: &mut R) -> Result<bool, Error> {
 fn write_boolean<W: Write>(writer: &mut W, b: bool) -> Result<(), Error> {
     let byte = if b { 1 } else { 0 };
     writer.write_u8(byte)?;
-    Ok(()) 
+    Ok(())
 }
 
-fn backup_file(path: &Path) -> Result<(), Error>
-{
+fn backup_file(path: &Path) -> Result<(), Error> {
     let path = PathBuf::from(&path);
-    let time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)?
-        .as_millis();
+    let time = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis();
     let backup_path = path
         .clone()
         .into_os_string()
