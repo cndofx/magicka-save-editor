@@ -70,6 +70,16 @@ pub struct SaveInfo {
     save_slots: Vec<SaveSlot>,
 }
 
+impl SaveInfo {
+    pub fn print(&self) {
+        for (i, slot) in self.save_slots.iter().enumerate() {
+            println!("Save Slot {} ============", i + 1);
+            slot.print();
+            println!("");
+        }
+    }
+}
+
 /// read string prefixed with a byte specifying the length
 fn read_len_string<R: Read>(reader: &mut R) -> Result<String, Error> {
     let len = reader.read_u8()?;

@@ -7,6 +7,7 @@ fn main() -> eyre::Result<()> {
     let mut save = Save::new(reader);
     let camp = save.load_campaign()?;
     // dbg!(&camp);
-    println!("{:X?}", camp);
+    // println!("{:X?}", camp);
+    camp.print();
     Ok(())
 }

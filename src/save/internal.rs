@@ -153,6 +153,20 @@ impl SaveSlot {
             ..Default::default()
         })
     }
+
+    pub fn print(&self) {
+        println!("Current Chapter  : {}", self.level);
+        println!("Maximum Chapter  : {}", self.max_allowed_level);
+        println!("Looped (NG+)     : {}", self.looped);
+        println!("Current Playtime : {}", self.current_playtime);
+        println!("Total Playtime   : {}", self.total_playtime);
+        println!("Players ----------------");
+        for player in self.players.iter() {
+            println!("  Name   : {}", player.0);
+            println!("  Staff  : {}", player.1.staff);
+            println!("  Weapon : {}", player.1.weapon);
+        }
+    }
 }
 
 impl PlayerSaveData {
