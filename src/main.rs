@@ -6,8 +6,7 @@ fn main() -> eyre::Result<()> {
     let reader = std::io::BufReader::new(std::fs::File::open(path)?);
     let mut save = Save::new(reader);
     let camp = save.load_campaign()?;
-    // dbg!(&camp);
-    // println!("{:X?}", camp);
     camp.print();
+    camp.save_to_file(path)?;
     Ok(())
 }
