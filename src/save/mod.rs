@@ -28,7 +28,6 @@ pub enum Error {
 #[derive(Debug)]
 pub struct Save<R> {
     reader: BufReader<R>,
-    done: bool,
 }
 
 /// structure containing deserialized save data
@@ -40,14 +39,11 @@ pub struct SaveInfo {
 
 impl<R: Read + Seek> Save<R> {
     pub fn new(reader: BufReader<R>) -> Self {
-        Save {
-            reader,
-            done: false,
-        }
+        Save { reader }
     }
 
-    pub fn load_campaign(&mut self) -> Result<SaveInfo, Error> {
-        // TODO: load_campaign() should either consume self or set self.done to prevent save from being read twice
+    /// consumes self and returns a deserialized SaveInfo
+    pub fn load_campaign(mut self) -> Result<SaveInfo, Error> {
         let mut version = String::new();
         let mut version_num = 0;
 
