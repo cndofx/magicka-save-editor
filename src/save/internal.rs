@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::num;
 
-use byteorder::LittleEndian;
+use byteorder::{LittleEndian, WriteBytesExt};
 use byteorder::ReadBytesExt;
 
-use super::Error;
+use super::{Error, write_boolean, write_len_string};
 use super::{read_len_string, Save};
 
 const TIPS_NAMES: [&str; 11] = [
@@ -86,19 +86,31 @@ impl SaveSlot {
         }
 
         // read checkpoint
-        let mut buffer = vec![0u8; 1024].into_boxed_slice();
-        let mut num_checkpoints = reader.read_i32::<LittleEndian>()? as usize;
-        let mut checkpoint = Vec::with_capacity(num_checkpoints as usize);
-        if num_checkpoints > 0 {
-            while num_checkpoints > 0 {
-                let count = reader
-                    .take(std::cmp::min(buffer.len() as u64, num_checkpoints as u64))
-                    .read(&mut buffer)?;
-                checkpoint.write_all(&buffer)?;
-                num_checkpoints -= count;
-            }
-            // TODO: maybe need to set checkpoint.position to 0 here
+        let checkpoint_len = reader.read_i32::<LittleEndian>()? as usize;
+        // let mut checkpoint = Vec::with_capacity(checkpoint_len);
+        let mut checkpoint = vec![0u8; checkpoint_len];
+        if checkpoint_len > 0 {
+            reader.take(checkpoint_len as u64).read_exact(&mut checkpoint)?;
         }
+        println!("read checkpoint len = {}", checkpoint_len);
+        println!("checkpoint.len() = {}", checkpoint.len());
+        let mut buffer = vec![0u8; 1024].into_boxed_slice();
+        // let mut num_checkpoints = reader.read_i32::<LittleEndian>()? as usize;
+        // println!("read checkpoint len = {}", num_checkpoints);
+        // let mut checkpoint = Vec::with_capacity(num_checkpoints as usize);
+        // if num_checkpoints > 0 {
+        //     while num_checkpoints > 0 {
+        //         let bytes_to_read = std::cmp::min(buffer.len() as u64, num_checkpoints as u64);
+        //         println!("reading {} bytes from checkpoint", bytes_to_read);
+        //         let count = reader
+        //         .take(bytes_to_read)
+        //         .read(&mut buffer)?;
+        //         checkpoint.write_all(&buffer)?;
+        //         num_checkpoints -= count;
+        //         println!("checkpoint len is now {}", checkpoint.len());
+        //     }
+        //     // TODO: maybe need to set checkpoint.position to 0 here
+        // }
 
         // good now maybe?
         Ok(SaveSlot {
@@ -154,6 +166,39 @@ impl SaveSlot {
         })
     }
 
+    pub fn write<W: Write>(&self, mut writer: &mut W) -> Result<(), Error> {
+        writer.write_u8(self.level)?;
+        writer.write_u8(self.max_allowed_level)?;
+        write_boolean(&mut writer, self.looped)?;
+        writer.write_i32::<LittleEndian>(self.total_playtime)?;
+        writer.write_i32::<LittleEndian>(self.current_playtime)?;
+
+        // write players
+        writer.write_i32::<LittleEndian>(self.players.len() as i32)?;
+        for (player_name, player_data) in &self.players {
+            write_len_string(&mut writer, player_name)?;
+            player_data.write(&mut writer)?;
+        }
+
+        writer.write_u64::<LittleEndian>(self.unlocked_magicks)?;
+
+        // write shown tips
+        writer.write_i32::<LittleEndian>(self.shown_tips.len() as i32)?;
+        for tip in &self.shown_tips {
+            tip.write(&mut writer)?;
+        }
+
+        // write checkpoint
+        let checkpoint_len = self.checkpoint.len() as i32;
+        writer.write_i32::<LittleEndian>(checkpoint_len)?;
+        println!("written checkpoint len = {}", checkpoint_len);
+        if checkpoint_len > 0 {
+            writer.write_all(&self.checkpoint)?;
+        }
+
+        Ok(())
+    }
+
     pub fn print(&self) {
         println!("Current Chapter  : {}", self.level);
         println!("Maximum Chapter  : {}", self.max_allowed_level);
@@ -175,6 +220,12 @@ impl PlayerSaveData {
         let weapon = read_len_string(&mut reader)?;
         Ok(PlayerSaveData { staff, weapon })
     }
+
+    pub fn write<W: Write>(&self, mut writer: &mut W) -> Result<(), Error> {
+        write_len_string(&mut writer, &self.staff)?;
+        write_len_string(&mut writer, &self.weapon)?;
+        Ok(())
+    } 
 }
 
 impl Tip {
@@ -187,6 +238,13 @@ impl Tip {
             timestamp,
             count,
         })
+    }
+
+    pub fn write<W: Write>(&self, mut writer: &mut W) -> Result<(), Error> {
+        write_len_string(&mut writer, &self.name)?;
+        // skip timestamp?
+        writer.write_i32::<LittleEndian>(self.count)?;
+        Ok(())
     }
 }
 

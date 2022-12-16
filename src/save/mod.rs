@@ -1,10 +1,10 @@
 use std::alloc::System;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read, Seek};
+use std::io::{BufRead, BufReader, Read, Seek, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use byteorder::ReadBytesExt;
+use byteorder::{ReadBytesExt, WriteBytesExt};
 use tap::{Conv, Tap};
 
 use self::internal::SaveSlot;
@@ -89,9 +89,25 @@ impl SaveInfo {
             backup_file(&path)?;
         }
 
+        let mut writer = BufWriter::new(File::create(path)?);
 
+        // write version information
+        writer.write_u8(0xFF)?;
+        write_len_string(&mut writer, &self.product_version)?;
 
-        todo!()
+        // write save slots
+        for i in 0..3 {
+            if let Some(save_slot) = self.save_slots.get(i) {
+                writer.write_u8(0x01)?;
+                save_slot.write(&mut writer)?;
+            } else {
+                writer.write_u8(0x00)?;
+            }
+        }
+
+        writer.flush()?;
+
+        Ok(())
     }
 
     pub fn print(&self) {
@@ -111,9 +127,23 @@ fn read_len_string<R: Read>(reader: &mut R) -> Result<String, Error> {
     Ok(std::str::from_utf8(&string)?.to_owned())
 }
 
+/// write string prefixed with a byte specifying the length
+fn write_len_string<W: Write>(writer: &mut W, string: &str) -> Result<(), Error> {
+    let len = string.len() as u8;
+    writer.write_u8(len)?;
+    write!(writer, "{}", string)?;
+    Ok(())
+}
+
 fn read_boolean<R: Read>(reader: &mut R) -> Result<bool, Error> {
     let byte = reader.read_u8()?;
     Ok(if byte == 0 { false } else { true })
+}
+
+fn write_boolean<W: Write>(writer: &mut W, b: bool) -> Result<(), Error> {
+    let byte = if b { 1 } else { 0 };
+    writer.write_u8(byte)?;
+    Ok(()) 
 }
 
 fn backup_file(path: &Path) -> Result<(), Error>
@@ -125,7 +155,7 @@ fn backup_file(path: &Path) -> Result<(), Error>
     let backup_path = path
         .clone()
         .into_os_string()
-        .tap_mut(|s| s.push(format!(".bak-{time}")))
+        .tap_mut(|s| s.push(format!(".{time}.bak")))
         .conv::<PathBuf>();
     std::fs::copy(path, backup_path)?;
     Ok(())
