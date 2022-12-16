@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 use std::io::{Read, Write};
-use std::num;
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use byteorder::ReadBytesExt;
 
-use super::{Error, write_boolean, write_len_string};
-use super::{read_len_string, Save};
+use super::Error;
+use super::{write_boolean, write_len_string, read_len_string};
 
 const TIPS_NAMES: [&str; 11] = [
     "#tu_text_hint_equipment_key",
@@ -25,7 +24,6 @@ const TIPS_NAMES: [&str; 11] = [
 /// internal representation of a save slot
 #[derive(Debug)]
 pub struct SaveSlot {
-    // buffer: Box<[u8]>,
     level: u8,
     max_allowed_level: u8,
     looped: bool,
@@ -34,7 +32,7 @@ pub struct SaveSlot {
     players: HashMap<String, PlayerSaveData>,
     unlocked_magicks: u64,
     shown_tips: Vec<Tip>,
-    checkpoint: Vec<u8>, // still dont really know what this is
+    checkpoint: Vec<u8>,
 }
 
 #[derive(Debug)]
@@ -46,7 +44,7 @@ pub struct PlayerSaveData {
 #[derive(Debug)]
 pub struct Tip {
     name: String,
-    timestamp: f64,
+    _timestamp: f64,
     count: i32,
 }
 
@@ -208,11 +206,11 @@ impl PlayerSaveData {
 impl Tip {
     pub fn read<R: Read>(mut reader: &mut R) -> Result<Self, Error> {
         let name = read_len_string(&mut reader)?;
-        let timestamp = f64::NEG_INFINITY;
+        let _timestamp = f64::NEG_INFINITY;
         let count = reader.read_i32::<LittleEndian>()?;
         Ok(Tip {
             name,
-            timestamp,
+            _timestamp,
             count,
         })
     }
@@ -238,7 +236,7 @@ impl Default for SaveSlot {
                 .iter()
                 .map(|&x| Tip {
                     name: String::from(x),
-                    timestamp: f64::NEG_INFINITY,
+                    _timestamp: f64::NEG_INFINITY,
                     count: 0,
                 })
                 .collect(),
