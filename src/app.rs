@@ -51,6 +51,7 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("menubar").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
+                // open file
                 if ui.button("Open").clicked() {
                     if let Some(path) = rfd::FileDialog::new().pick_file() {
                         if let Err(e) = self.try_load_save(path) {
@@ -60,11 +61,18 @@ impl eframe::App for App {
                         }
                     }
                 }
+                // save file
                 if ui
                     .add_enabled(self.save.is_some(), egui::Button::new("Save"))
                     .clicked()
                 {
-                    println!("save");
+                    if let Some(path) = rfd::FileDialog::new().save_file() {
+                        if let Err(e) = self.save.as_ref().unwrap().save_to_file(path) {
+                            let message = format!("unable to save file due to {e}");
+                            eprintln!("{}", message);
+                            self.status_message = message;
+                        }
+                    }
                 }
             });
         });
