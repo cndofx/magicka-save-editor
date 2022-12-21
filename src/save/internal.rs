@@ -191,6 +191,22 @@ impl SaveSlot {
     pub fn get_players(&self) -> &HashMap<String, PlayerSaveData> {
         &self.players
     }
+
+    pub fn get_current_playtime(&self) -> i32 {
+        self.current_playtime
+    }
+
+    pub fn get_current_playtime_mut(&mut self) -> &mut i32 {
+        &mut self.current_playtime
+    }
+
+    pub fn get_total_playtime(&self) -> i32 {
+        self.total_playtime
+    }
+
+    pub fn get_total_playtime_mut(&mut self) -> &mut i32 {
+        &mut self.total_playtime
+    }
 }
 
 impl PlayerSaveData {

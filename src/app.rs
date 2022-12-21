@@ -65,6 +65,7 @@ impl App {
     }
 
     fn render_editor(&mut self, ui: &mut egui::Ui) {
+        
         if let Some(save) = &mut self.save {
             ui.horizontal(|ui| {
                 for i in 0..save.get_slots().len() {
@@ -75,8 +76,17 @@ impl App {
                     );
                 }
             });
+            let slot = save.get_slot_mut(self.state.selected_save_index);
+            egui::Grid::new("editorgrid").striped(true).spacing([30.0, 4.0]).show(ui, |ui| {
+                ui.label("Current Playtime:");
+                ui.add(egui::DragValue::new(slot.get_current_playtime_mut()));
+                ui.end_row();
+                ui.label("Total Playtime:");
+                ui.add(egui::DragValue::new(slot.get_total_playtime_mut()));
+                ui.end_row();
+            });
             ui.heading("Players:");
-            for (name, data) in save.get_slot_mut(self.state.selected_save_index).get_players() {
+            for (name, data) in slot.get_players() {
                 ui.label(format!("Name: {name}"));
                 ui.label(format!("Data: {data:#?}"));
             }
