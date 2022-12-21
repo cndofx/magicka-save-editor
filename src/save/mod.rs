@@ -152,6 +152,12 @@ fn backup_file(path: &Path) -> Result<(), Error> {
     Ok(())
 }
 
+impl SaveInfo {
+    pub fn get_slots(&self) -> &[SaveSlot] {
+        &self.save_slots
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
