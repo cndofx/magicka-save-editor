@@ -30,6 +30,40 @@ impl App {
         Ok(())
     }
 
+    fn render_menubar(&mut self, ui: &mut egui::Ui) {
+        egui::menu::bar(ui, |ui| {
+            // open file
+            if ui.button("Open").clicked() {
+                if let Some(path) = rfd::FileDialog::new()
+                    .add_filter("save", &["sav", "bak"])
+                    .pick_file()
+                {
+                    if let Err(e) = self.try_load_save(path) {
+                        let message = format!("unable to load save due to {e}");
+                        eprintln!("{}", message);
+                        self.status_message = message;
+                    }
+                }
+            }
+            // save file
+            if ui
+                .add_enabled(self.save.is_some(), egui::Button::new("Save"))
+                .clicked()
+            {
+                if let Some(path) = rfd::FileDialog::new()
+                    .add_filter("save", &["sav"])
+                    .save_file()
+                {
+                    if let Err(e) = self.save.as_ref().unwrap().save_to_file(path) {
+                        let message = format!("unable to save file due to {e}");
+                        eprintln!("{}", message);
+                        self.status_message = message;
+                    }
+                }
+            }
+        });
+    }
+
     fn render_editor(&mut self, ui: &mut egui::Ui) {
         if let Some(save) = &self.save {
             ui.horizontal(|ui| {
@@ -50,31 +84,7 @@ impl App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("menubar").show(ctx, |ui| {
-            egui::menu::bar(ui, |ui| {
-                // open file
-                if ui.button("Open").clicked() {
-                    if let Some(path) = rfd::FileDialog::new().add_filter("save", &["sav", "bak"]).pick_file() {
-                        if let Err(e) = self.try_load_save(path) {
-                            let message = format!("unable to load save due to {e}");
-                            eprintln!("{}", message);
-                            self.status_message = message;
-                        }
-                    }
-                }
-                // save file
-                if ui
-                    .add_enabled(self.save.is_some(), egui::Button::new("Save"))
-                    .clicked()
-                {
-                    if let Some(path) = rfd::FileDialog::new().add_filter("save", &["sav"]).save_file() {
-                        if let Err(e) = self.save.as_ref().unwrap().save_to_file(path) {
-                            let message = format!("unable to save file due to {e}");
-                            eprintln!("{}", message);
-                            self.status_message = message;
-                        }
-                    }
-                }
-            });
+            self.render_menubar(ui);
         });
 
         egui::TopBottomPanel::bottom("statusbar").show(ctx, |ui| {
@@ -82,12 +92,6 @@ impl eframe::App for App {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            // let text = format!("save loaded: {}", self.save.is_some());
-            // ui.label(text);
-            // if let Some(save) = &self.save {
-            //     let text = format!("has {} save slots", save.get_slots().len());
-            //     ui.label(text);
-            // }
             self.render_editor(ui);
         });
     }
