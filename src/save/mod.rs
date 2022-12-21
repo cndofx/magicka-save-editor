@@ -156,6 +156,10 @@ impl SaveInfo {
     pub fn get_slots(&self) -> &[SaveSlot] {
         &self.save_slots
     }
+
+    pub fn get_slot_mut(&mut self, idx: usize) -> &mut SaveSlot {
+        &mut self.save_slots[idx]
+    }
 }
 
 #[cfg(test)]

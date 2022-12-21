@@ -65,16 +65,21 @@ impl App {
     }
 
     fn render_editor(&mut self, ui: &mut egui::Ui) {
-        if let Some(save) = &self.save {
+        if let Some(save) = &mut self.save {
             ui.horizontal(|ui| {
-                for i in 1..=save.get_slots().len() {
+                for i in 0..save.get_slots().len() {
                     ui.radio_value(
                         &mut self.state.selected_save_index,
                         i,
-                        format!("Save Slot {i}"),
+                        format!("Save Slot {}", i + 1),
                     );
                 }
             });
+            ui.heading("Players:");
+            for (name, data) in save.get_slot_mut(self.state.selected_save_index).get_players() {
+                ui.label(format!("Name: {name}"));
+                ui.label(format!("Data: {data:#?}"));
+            }
         } else {
             ui.heading("No save loaded");
         }
@@ -100,7 +105,7 @@ impl eframe::App for App {
 impl Default for EditorState {
     fn default() -> Self {
         Self {
-            selected_save_index: 1,
+            selected_save_index: 0,
         }
     }
 }

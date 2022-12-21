@@ -187,6 +187,10 @@ impl SaveSlot {
             println!("  Weapon : {}", player.1.weapon);
         }
     }
+
+    pub fn get_players(&self) -> &HashMap<String, PlayerSaveData> {
+        &self.players
+    }
 }
 
 impl PlayerSaveData {
