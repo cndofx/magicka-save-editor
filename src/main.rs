@@ -11,6 +11,6 @@ fn main() -> eyre::Result<()> {
     // camp.print();
     // camp.save_to_file(out_path)?;
 
-    eframe::run_native("Magicka Save Editor", eframe::NativeOptions::default(), Box::new(|cc| Box::new(magicka_save_editor::app::App::new(cc, "gaming"))));
+    eframe::run_native("Magicka Save Editor", eframe::NativeOptions::default(), Box::new(|cc| Box::new(magicka_save_editor::app::App::new(cc))));
     Ok(())
 }

@@ -1,19 +1,23 @@
-use std::{path::Path, fs::File, io::BufReader};
+use std::{fs::File, io::BufReader, path::Path};
 
-use crate::save::{SaveInfo, Error, Save};
+use crate::save::{Error, Save, SaveInfo};
 
 pub struct App {
     save: Option<SaveInfo>,
     state: EditorState,
+    status_message: String,
 }
 
-struct EditorState {}
+struct EditorState {
+    selected_save_index: usize,
+}
 
 impl App {
-    pub fn new(cc: &eframe::CreationContext<'_>, text: &str) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         App {
             save: None,
             state: EditorState::default(),
+            status_message: String::from("working 100% perfectly for sure"),
         }
     }
 
@@ -25,6 +29,22 @@ impl App {
         self.save = Some(save_info);
         Ok(())
     }
+
+    fn render_editor(&mut self, ui: &mut egui::Ui) {
+        if let Some(save) = &self.save {
+            ui.horizontal(|ui| {
+                for i in 1..=save.get_slots().len() {
+                    ui.radio_value(
+                        &mut self.state.selected_save_index,
+                        i,
+                        format!("Save Slot {i}"),
+                    );
+                }
+            });
+        } else {
+            ui.heading("No save loaded");
+        }
+    }
 }
 
 impl eframe::App for App {
@@ -33,9 +53,10 @@ impl eframe::App for App {
             egui::menu::bar(ui, |ui| {
                 if ui.button("Open").clicked() {
                     if let Some(path) = rfd::FileDialog::new().pick_file() {
-                        println!("got path {}", path.display());
                         if let Err(e) = self.try_load_save(path) {
-                            eprintln!("unable to load save:\n{e}");
+                            let message = format!("unable to load save due to {e}");
+                            eprintln!("{}", message);
+                            self.status_message = message;
                         }
                     }
                 }
@@ -48,19 +69,26 @@ impl eframe::App for App {
             });
         });
 
+        egui::TopBottomPanel::bottom("statusbar").show(ctx, |ui| {
+            ui.label(format!("status: {}", self.status_message));
+        });
+
         egui::CentralPanel::default().show(ctx, |ui| {
-            let text = format!("save loaded: {}", self.save.is_some());
-            ui.label(text);
-            if let Some(save) = &self.save {
-                let text = format!("has {} save slots", save.get_slots().len());
-                ui.label(text);
-            }
+            // let text = format!("save loaded: {}", self.save.is_some());
+            // ui.label(text);
+            // if let Some(save) = &self.save {
+            //     let text = format!("has {} save slots", save.get_slots().len());
+            //     ui.label(text);
+            // }
+            self.render_editor(ui);
         });
     }
 }
 
 impl Default for EditorState {
     fn default() -> Self {
-        Self {}
+        Self {
+            selected_save_index: 1,
+        }
     }
 }
