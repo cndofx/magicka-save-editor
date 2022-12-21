@@ -53,7 +53,7 @@ impl eframe::App for App {
             egui::menu::bar(ui, |ui| {
                 // open file
                 if ui.button("Open").clicked() {
-                    if let Some(path) = rfd::FileDialog::new().pick_file() {
+                    if let Some(path) = rfd::FileDialog::new().add_filter("save", &["sav", "bak"]).pick_file() {
                         if let Err(e) = self.try_load_save(path) {
                             let message = format!("unable to load save due to {e}");
                             eprintln!("{}", message);
@@ -66,7 +66,7 @@ impl eframe::App for App {
                     .add_enabled(self.save.is_some(), egui::Button::new("Save"))
                     .clicked()
                 {
-                    if let Some(path) = rfd::FileDialog::new().save_file() {
+                    if let Some(path) = rfd::FileDialog::new().add_filter("save", &["sav"]).save_file() {
                         if let Err(e) = self.save.as_ref().unwrap().save_to_file(path) {
                             let message = format!("unable to save file due to {e}");
                             eprintln!("{}", message);
