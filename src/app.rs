@@ -119,7 +119,7 @@ impl App {
                 }
             });
             let slot = save.get_slot_mut(self.state.selected_save_index);
-                egui::Grid::new("editorgrid1")
+            egui::Grid::new("editorgrid")
                 .striped(true)
                 .spacing([30.0, 4.0])
                 .show(ui, |ui| {
@@ -136,15 +136,44 @@ impl App {
                     ui.add(egui::DragValue::new(slot.get_max_allowed_level_mut()));
                     ui.end_row();
                     ui.label("Looped (NG+):");
-                    // ui.add(egui::Ch)
                     ui.checkbox(slot.get_looped_mut(), "");
                     ui.end_row();
                 });
-            
+            egui::CollapsingHeader::new("Players")
+                .default_open(true)
+                .show(ui, |ui| {
+                    egui::Grid::new("editorplayersgrid")
+                        // .striped(true)
+                        .spacing([15.0, 4.0])
+                        .min_col_width(100.0)
+                        .max_col_width(250.0)
+                        .show(ui, |ui| {
+                            for player in slot.get_players_mut() {
+                                ui.label("Name");
+                                ui.label("Staff");
+                                ui.label("Weapon");
+                                ui.end_row();
+                                ui.add(
+                                    egui::TextEdit::singleline(player.get_name_mut())
+                                        .desired_width(150.0),
+                                );
+                                ui.add(
+                                    egui::TextEdit::singleline(player.get_staff_mut())
+                                        .desired_width(150.0),
+                                );
+                                ui.add(
+                                    egui::TextEdit::singleline(player.get_weapon_mut())
+                                        .desired_width(150.0),
+                                );
+                                ui.end_row();
+                            }
+                        });
+                });
             ui.heading("Players:");
-            for (name, data) in slot.get_players() {
-                ui.label(format!("Name: {name}"));
-                ui.label(format!("Data: {data:#?}"));
+            for player in slot.get_players_mut() {
+                ui.label(format!("Name: {}", player.get_name_mut()));
+                ui.label(format!("Staff: {}", player.get_staff_mut()));
+                ui.label(format!("Weapon: {}", player.get_weapon_mut()));
             }
         } else {
             ui.heading("No save loaded");
