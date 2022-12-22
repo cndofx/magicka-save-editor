@@ -119,7 +119,7 @@ impl App {
                 }
             });
             let slot = save.get_slot_mut(self.state.selected_save_index);
-            egui::Grid::new("editorgrid")
+                egui::Grid::new("editorgrid1")
                 .striped(true)
                 .spacing([30.0, 4.0])
                 .show(ui, |ui| {
@@ -129,7 +129,18 @@ impl App {
                     ui.label("Total Playtime:");
                     ui.add(egui::DragValue::new(slot.get_total_playtime_mut()));
                     ui.end_row();
+                    ui.label("Current Level:");
+                    ui.add(egui::DragValue::new(slot.get_current_level_mut()));
+                    ui.end_row();
+                    ui.label("Max Allowed Level:");
+                    ui.add(egui::DragValue::new(slot.get_max_allowed_level_mut()));
+                    ui.end_row();
+                    ui.label("Looped (NG+):");
+                    // ui.add(egui::Ch)
+                    ui.checkbox(slot.get_looped_mut(), "");
+                    ui.end_row();
                 });
+            
             ui.heading("Players:");
             for (name, data) in slot.get_players() {
                 ui.label(format!("Name: {name}"));

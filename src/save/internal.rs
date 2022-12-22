@@ -192,20 +192,24 @@ impl SaveSlot {
         &self.players
     }
 
-    pub fn get_current_playtime(&self) -> i32 {
-        self.current_playtime
-    }
-
     pub fn get_current_playtime_mut(&mut self) -> &mut i32 {
         &mut self.current_playtime
     }
 
-    pub fn get_total_playtime(&self) -> i32 {
-        self.total_playtime
-    }
-
     pub fn get_total_playtime_mut(&mut self) -> &mut i32 {
         &mut self.total_playtime
+    }
+
+    pub fn get_current_level_mut(&mut self) -> &mut u8 {
+        &mut self.level
+    }
+
+    pub fn get_max_allowed_level_mut(&mut self) -> &mut u8 {
+        &mut self.max_allowed_level
+    }
+
+    pub fn get_looped_mut(&mut self) -> &mut bool {
+        &mut self.looped
     }
 }
 
