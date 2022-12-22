@@ -68,8 +68,13 @@ impl App {
                 // }
                 if let Some(game_path) = Self::get_game_directory() {
                     dbg!(&game_path);
+                    // crate::save::items::get_items(game_path);
+                    let staves = crate::save::items::get_staves(&game_path);
+                    let weapons = crate::save::items::get_weapons(&game_path);
+                    dbg!(&staves);
+                    dbg!(&weapons);
                 } else {
-                    self.status_message = String::from("no game path found");
+                    self.status_message = String::from("selected folder is not the game directory");
                 }
             }
         });
