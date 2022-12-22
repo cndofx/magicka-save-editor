@@ -1,4 +1,4 @@
-use std::{fs::File, io::BufReader, path::Path};
+use std::{fs::File, io::BufReader, path::{Path, PathBuf}, ffi::OsStr};
 
 use crate::save::{Error, Save, SaveInfo};
 
@@ -61,7 +61,32 @@ impl App {
                     }
                 }
             }
+            if ui.button("TEMP: get game path").clicked() {
+                // if let Some(game_path) = rfd::FileDialog::new().set_title("Select containing game directory").pick_folder() {
+                //     dbg!(&game_path);
+
+                // }
+                if let Some(game_path) = Self::get_game_directory() {
+                    dbg!(&game_path);
+                } else {
+                    self.status_message = String::from("no game path found");
+                }
+            }
         });
+    }
+
+    fn get_game_directory() -> Option<PathBuf> {
+        if let Some(path) = rfd::FileDialog::new().set_title("Select containing game directory").pick_folder() {
+            if !path.read_dir().unwrap().any(|x| {
+                x.unwrap().file_name() == OsStr::new("Magicka.exe")
+            }) {
+                None
+            } else {
+                Some(path)
+            }
+        } else {
+            None
+        }
     }
 
     fn render_editor(&mut self, ui: &mut egui::Ui) {

@@ -9,6 +9,7 @@ use tap::{Conv, Tap};
 use self::internal::SaveSlot;
 
 mod internal;
+pub mod items;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
