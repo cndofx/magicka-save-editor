@@ -1,11 +1,19 @@
-use std::{fs::File, io::BufReader, path::{Path, PathBuf}, ffi::OsStr};
+use std::{
+    ffi::OsStr,
+    fs::File,
+    io::BufReader,
+    path::{Path, PathBuf},
+};
 
-use crate::save::{Error, Save, SaveInfo};
+use crate::{
+    save::{Error, Save, SaveInfo},
+    Config, CONFY_APP_NAME, CONFY_CONFIG_NAME,
+};
 
 pub struct App {
     save: Option<SaveInfo>,
     state: EditorState,
-    status_message: String,
+    config: Config,
 }
 
 struct EditorState {
@@ -13,11 +21,11 @@ struct EditorState {
 }
 
 impl App {
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>, config: Config) -> Self {
         App {
             save: None,
             state: EditorState::default(),
-            status_message: String::from("working 100% perfectly for sure"),
+            config: config,
         }
     }
 
@@ -31,10 +39,15 @@ impl App {
     }
 
     fn get_game_directory() -> Option<PathBuf> {
-        if let Some(path) = rfd::FileDialog::new().set_title("Select containing game directory").pick_folder() {
-            if !path.read_dir().unwrap().any(|x| {
-                x.unwrap().file_name() == OsStr::new("Magicka.exe")
-            }) {
+        if let Some(path) = rfd::FileDialog::new()
+            .set_title("Select containing game directory")
+            .pick_folder()
+        {
+            if !path
+                .read_dir()
+                .unwrap()
+                .any(|x| x.unwrap().file_name() == OsStr::new("Magicka.exe"))
+            {
                 None
             } else {
                 Some(path)
@@ -55,7 +68,7 @@ impl App {
                     if let Err(e) = self.try_load_save(path) {
                         let message = format!("unable to load save due to {e}");
                         eprintln!("{}", message);
-                        self.status_message = message;
+                        // self.status_message = message;
                     }
                 }
             }
@@ -71,7 +84,7 @@ impl App {
                     if let Err(e) = self.save.as_ref().unwrap().save_to_file(path) {
                         let message = format!("unable to save file due to {e}");
                         eprintln!("{}", message);
-                        self.status_message = message;
+                        // self.status_message = message;
                     }
                 }
             }
@@ -88,14 +101,13 @@ impl App {
                     dbg!(&staves);
                     dbg!(&weapons);
                 } else {
-                    self.status_message = String::from("selected folder is not the game directory");
+                    // self.status_message = String::from("selected folder is not the game directory");
                 }
             }
         });
     }
 
     fn render_editor(&mut self, ui: &mut egui::Ui) {
-        
         if let Some(save) = &mut self.save {
             ui.horizontal(|ui| {
                 for i in 0..save.get_slots().len() {
@@ -107,14 +119,17 @@ impl App {
                 }
             });
             let slot = save.get_slot_mut(self.state.selected_save_index);
-            egui::Grid::new("editorgrid").striped(true).spacing([30.0, 4.0]).show(ui, |ui| {
-                ui.label("Current Playtime:");
-                ui.add(egui::DragValue::new(slot.get_current_playtime_mut()));
-                ui.end_row();
-                ui.label("Total Playtime:");
-                ui.add(egui::DragValue::new(slot.get_total_playtime_mut()));
-                ui.end_row();
-            });
+            egui::Grid::new("editorgrid")
+                .striped(true)
+                .spacing([30.0, 4.0])
+                .show(ui, |ui| {
+                    ui.label("Current Playtime:");
+                    ui.add(egui::DragValue::new(slot.get_current_playtime_mut()));
+                    ui.end_row();
+                    ui.label("Total Playtime:");
+                    ui.add(egui::DragValue::new(slot.get_total_playtime_mut()));
+                    ui.end_row();
+                });
             ui.heading("Players:");
             for (name, data) in slot.get_players() {
                 ui.label(format!("Name: {name}"));
@@ -133,7 +148,20 @@ impl eframe::App for App {
         });
 
         egui::TopBottomPanel::bottom("statusbar").show(ctx, |ui| {
-            ui.label(format!("status: {}", self.status_message));
+            if let Some(game_directory) = &self.config.game_directory {
+                ui.label(format!("Using game directory: '{game_directory}'"));
+            } else {
+                ui.horizontal(|ui| {
+                    ui.label("No game directory loaded.");
+                    if ui.button("Select game directory").clicked() {
+                        if let Some(directory) = Self::get_game_directory() {
+                            println!("{}", directory.display());
+                            self.config.game_directory = directory.to_str().map(|s| s.to_string());
+                            confy::store(CONFY_APP_NAME, CONFY_CONFIG_NAME, &self.config).unwrap();
+                        }
+                    }
+                });
+            }
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
