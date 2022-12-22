@@ -30,6 +30,20 @@ impl App {
         Ok(())
     }
 
+    fn get_game_directory() -> Option<PathBuf> {
+        if let Some(path) = rfd::FileDialog::new().set_title("Select containing game directory").pick_folder() {
+            if !path.read_dir().unwrap().any(|x| {
+                x.unwrap().file_name() == OsStr::new("Magicka.exe")
+            }) {
+                None
+            } else {
+                Some(path)
+            }
+        } else {
+            None
+        }
+    }
+
     fn render_menubar(&mut self, ui: &mut egui::Ui) {
         egui::menu::bar(ui, |ui| {
             // open file
@@ -78,20 +92,6 @@ impl App {
                 }
             }
         });
-    }
-
-    fn get_game_directory() -> Option<PathBuf> {
-        if let Some(path) = rfd::FileDialog::new().set_title("Select containing game directory").pick_folder() {
-            if !path.read_dir().unwrap().any(|x| {
-                x.unwrap().file_name() == OsStr::new("Magicka.exe")
-            }) {
-                None
-            } else {
-                Some(path)
-            }
-        } else {
-            None
-        }
     }
 
     fn render_editor(&mut self, ui: &mut egui::Ui) {
