@@ -14,18 +14,22 @@ pub struct App {
     save: Option<SaveInfo>,
     state: EditorState,
     config: Config,
+    game_directory_set: bool,
 }
 
 struct EditorState {
     selected_save_index: usize,
+    staves: Option<Vec<String>>,
 }
 
 impl App {
     pub fn new(cc: &eframe::CreationContext<'_>, config: Config) -> Self {
+        let game_directory_set = config.game_directory.is_some();
         App {
             save: None,
             state: EditorState::default(),
-            config: config,
+            config,
+            game_directory_set,
         }
     }
 
@@ -142,32 +146,36 @@ impl App {
             egui::CollapsingHeader::new("Players")
                 .default_open(true)
                 .show(ui, |ui| {
-                    egui::Grid::new("editorplayersgrid")
-                        // .striped(true)
-                        .spacing([15.0, 4.0])
-                        .min_col_width(100.0)
-                        .max_col_width(250.0)
-                        .show(ui, |ui| {
-                            for player in slot.get_players_mut() {
-                                ui.label("Name");
-                                ui.label("Staff");
-                                ui.label("Weapon");
-                                ui.end_row();
-                                ui.add(
-                                    egui::TextEdit::singleline(player.get_name_mut())
-                                        .desired_width(150.0),
-                                );
-                                ui.add(
-                                    egui::TextEdit::singleline(player.get_staff_mut())
-                                        .desired_width(150.0),
-                                );
-                                ui.add(
-                                    egui::TextEdit::singleline(player.get_weapon_mut())
-                                        .desired_width(150.0),
-                                );
-                                ui.end_row();
-                            }
-                        });
+                    if !self.game_directory_set {
+                        ui.heading("You must set the Magicka game directory before use");
+                    }
+                    ui.add_enabled_ui(self.game_directory_set, |ui| {
+                        egui::Grid::new("editorplayersgrid")
+                            .spacing([15.0, 4.0])
+                            .min_col_width(100.0)
+                            .max_col_width(250.0)
+                            .show(ui, |ui| {
+                                for player in slot.get_players_mut() {
+                                    ui.label("Name");
+                                    ui.label("Staff");
+                                    ui.label("Weapon");
+                                    ui.end_row();
+                                    ui.add(
+                                        egui::TextEdit::singleline(player.get_name_mut())
+                                            .desired_width(150.0),
+                                    );
+                                    ui.add(
+                                        egui::TextEdit::singleline(player.get_staff_mut())
+                                            .desired_width(150.0),
+                                    );
+                                    ui.add(
+                                        egui::TextEdit::singleline(player.get_weapon_mut())
+                                            .desired_width(150.0),
+                                    );
+                                    ui.end_row();
+                                }
+                            });
+                    });
                 });
             ui.heading("Players:");
             for player in slot.get_players_mut() {
@@ -214,6 +222,7 @@ impl Default for EditorState {
     fn default() -> Self {
         Self {
             selected_save_index: 0,
+            staves: None,
         }
     }
 }
