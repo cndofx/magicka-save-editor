@@ -72,7 +72,6 @@ impl App {
                     if let Err(e) = self.try_load_save(path) {
                         let message = format!("unable to load save due to {e}");
                         eprintln!("{}", message);
-                        // self.status_message = message;
                     }
                 }
             }
@@ -88,24 +87,7 @@ impl App {
                     if let Err(e) = self.save.as_ref().unwrap().save_to_file(path) {
                         let message = format!("unable to save file due to {e}");
                         eprintln!("{}", message);
-                        // self.status_message = message;
                     }
-                }
-            }
-            if ui.button("TEMP: get game path").clicked() {
-                // if let Some(game_path) = rfd::FileDialog::new().set_title("Select containing game directory").pick_folder() {
-                //     dbg!(&game_path);
-
-                // }
-                if let Some(game_path) = Self::get_game_directory() {
-                    dbg!(&game_path);
-                    // crate::save::items::get_items(game_path);
-                    let staves = crate::save::items::get_staves(&game_path);
-                    let weapons = crate::save::items::get_weapons(&game_path);
-                    dbg!(&staves);
-                    dbg!(&weapons);
-                } else {
-                    // self.status_message = String::from("selected folder is not the game directory");
                 }
             }
         });
@@ -195,23 +177,27 @@ impl eframe::App for App {
             self.render_menubar(ui);
         });
 
-        egui::TopBottomPanel::bottom("statusbar").show(ctx, |ui| {
-            if let Some(game_directory) = &self.config.game_directory {
-                ui.label(format!("Using game directory: '{game_directory}'"));
-            } else {
-                ui.horizontal(|ui| {
-                    ui.label("No game directory loaded.");
-                    if ui.button("Select game directory").clicked() {
+        egui::TopBottomPanel::bottom("statusbar")
+            .exact_height(40.0)
+            .show(ctx, |ui| {
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                    if ui.button("Set Game Directory").clicked() {
                         if let Some(directory) = Self::get_game_directory() {
-                            println!("{}", directory.display());
                             self.config.game_directory = directory.to_str().map(|s| s.to_string());
                             confy::store(CONFY_APP_NAME, CONFY_CONFIG_NAME, &self.config).unwrap();
                         }
                     }
+                    ui.add_space(20.0);
+                    if let Some(game_directory) = &self.config.game_directory {
+                        ui.label(format!("Using game directory: '{game_directory}'"));
+                    } else {
+                        ui.horizontal(|ui| {
+                            ui.label("No game directory loaded.");
+                        });
+                    }
                 });
-            }
-        });
-
+            });
+        
         egui::CentralPanel::default().show(ctx, |ui| {
             self.render_editor(ui);
         });

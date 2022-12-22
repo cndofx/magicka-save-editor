@@ -186,9 +186,9 @@ impl SaveSlot {
         //     player_data.write(&mut writer)?;
         // }
         for player in &self.players {
-            write_len_string(&mut writer, &player.name);
-            write_len_string(&mut writer, &player.staff);
-            write_len_string(&mut writer, &player.weapon);
+            write_len_string(&mut writer, &player.name)?;
+            write_len_string(&mut writer, &player.staff)?;
+            write_len_string(&mut writer, &player.weapon)?;
         }
 
         writer.write_u64::<LittleEndian>(self.unlocked_magicks)?;
