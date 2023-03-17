@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 
-use iced::{Sandbox, widget::{button, row, text, container}, Length};
+use iced::{
+    widget::{button, column, container, horizontal_rule, row, text},
+    Sandbox, Alignment,
+};
 use steamlocate::SteamDir;
 
 const MAGICKA_APP_ID: u32 = 42910;
@@ -20,6 +23,7 @@ impl Sandbox for App {
 
     fn new() -> Self {
         App {
+            // todo: gracefully handle situation when steamdir cant be found
             steam_dir: SteamDir::locate().unwrap(),
             game_path: None,
         }
@@ -31,38 +35,31 @@ impl Sandbox for App {
 
     fn update(&mut self, message: Self::Message) {
         match message {
-            Message::DetectGamePathClicked => {
-                match self.steam_dir.app(&MAGICKA_APP_ID) {
-                    Some(app) => {
-                        println!("found magicka at {:?}", app.path);
-                        self.game_path = Some(app.path.clone());
-                    },
-                    None => {
-                        println!("magicka not found");
-                    },
+            Message::DetectGamePathClicked => match self.steam_dir.app(&MAGICKA_APP_ID) {
+                Some(app) => {
+                    self.game_path = Some(app.path.clone());
                 }
-            }
+                None => {
+                    eprintln!("magicka directory not found");
+                }
+            },
         }
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message> {
-        let detect_path_button = button("Detect Game Path").on_press(Message::DetectGamePathClicked);
+        let detect_path_button =
+            button("Detect Game Path").on_press(Message::DetectGamePathClicked);
         let path_text = if let Some(path) = &self.game_path {
             text(path.display())
         } else {
             text("Game path not set")
         };
 
-        let content = row![
-            detect_path_button,
-            path_text,
-        ]
-        .spacing(20)
-        .padding(5);
+        let row = row![detect_path_button, path_text,].spacing(20).align_items(Alignment::Center);
 
-        content.into()
+        let content = column![row, horizontal_rule(15), text("test"),];
 
-        // container(content).width(Length::Fill).height(Length::Fill).center_x().center_y().into()
+        container(content).padding(5).into()
     }
 
     fn theme(&self) -> iced::Theme {
