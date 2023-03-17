@@ -1,13 +1,18 @@
+use std::path::PathBuf;
+
 use iced::{Sandbox, widget::{button, row, text, container}, Length};
+use steamlocate::SteamDir;
+
+const MAGICKA_APP_ID: u32 = 42910;
 
 pub struct App {
-    counter_value: i32,
+    steam_dir: SteamDir,
+    game_path: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
-    IncrementClicked,
-    DecrementClicked,
+    DetectGamePathClicked,
 }
 
 impl Sandbox for App {
@@ -15,7 +20,8 @@ impl Sandbox for App {
 
     fn new() -> Self {
         App {
-            counter_value: 0,
+            steam_dir: SteamDir::locate().unwrap(),
+            game_path: None,
         }
     }
 
@@ -25,25 +31,38 @@ impl Sandbox for App {
 
     fn update(&mut self, message: Self::Message) {
         match message {
-            Message::IncrementClicked => self.counter_value += 1,
-            Message::DecrementClicked => self.counter_value -= 1,
+            Message::DetectGamePathClicked => {
+                match self.steam_dir.app(&MAGICKA_APP_ID) {
+                    Some(app) => {
+                        println!("found magicka at {:?}", app.path);
+                        self.game_path = Some(app.path.clone());
+                    },
+                    None => {
+                        println!("magicka not found");
+                    },
+                }
+            }
         }
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message> {
-        let increment_button = button("increment").on_press(Message::IncrementClicked);
-        let decrement_button = button("decrement").on_press(Message::DecrementClicked);
-        let text = text(self.counter_value);
+        let detect_path_button = button("Detect Game Path").on_press(Message::DetectGamePathClicked);
+        let path_text = if let Some(path) = &self.game_path {
+            text(path.display())
+        } else {
+            text("Game path not set")
+        };
 
         let content = row![
-            decrement_button,
-            text,
-            increment_button,
+            detect_path_button,
+            path_text,
         ]
         .spacing(20)
-        .padding(100);
+        .padding(5);
 
-        container(content).width(Length::Fill).height(Length::Fill).center_x().center_y().into()
+        content.into()
+
+        // container(content).width(Length::Fill).height(Length::Fill).center_x().center_y().into()
     }
 
     fn theme(&self) -> iced::Theme {

@@ -15,5 +15,6 @@ eyre = "0.6.8"
 iced = "0.8.0"
 rfd = "0.10.0"
 serde = { version = "1.0.151", features = ["derive"] }
+steamlocate = "1.1.1"
 tap = "1.0.1"
 thiserror = "1.0.37"
